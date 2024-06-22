@@ -8,7 +8,6 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtWidgets import *
-from PyQt6.QtCore import pyqtSlot
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -66,10 +65,30 @@ class Ui_MainWindow(object):
         self.benedicto_pay.setText(_translate("MainWindow", "Pay"))
 
 class benedicto_PaymentMainWindow(QMainWindow, Ui_MainWindow):
-     def __init__(self):
+    def __init__(self, total_payment):
+         
         super(benedicto_PaymentMainWindow, self).__init__()
         self.setupUi(self)
 
+        self.benedicto_total.setText(str(total_payment))
+        print(total_payment)
+        
+        self.benedicto_pay.clicked.connect(self.paynow)
+        
+        self.total = total_payment
+        
+    def paynow(self):
+        cash = int(self.benedicto_input.text())
+        
+        if cash >= self.total:
+            message = QMessageBox()
+            message.setText('Payment Success')
+            message.exec()        
+        else:
+            message = QMessageBox()
+            message.setText('Insufficient cash')
+            message.exec()      
+            
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)

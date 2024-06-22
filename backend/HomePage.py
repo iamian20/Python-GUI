@@ -228,17 +228,60 @@ class benedicto_HomeMainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.benedicto_lbl_name.setText(name)
         self.benedicto_lbl_age.setText(age)
-        self.benedicto_dc.clicked.connect(self.discountbtn)
-        self.products = [
-            {"name": "Fries", "price": 30},
-            {"name": "MilkTea", "price": 60},
-            {"name": "Cheese Sticks", "price": 25},
-            {"name": "Soda", "price": 20},
-            {"name": "Donut", "price": 20},
-            {"name": "Ice Cream", "price": 20}
-        ]
+        
+        self.benedicto_fries.clicked.connect(lambda: self.add_product("Fries", 30))
+        self.benedicto_milktea.clicked.connect(lambda: self.add_product("MilkTea", 60))
+        self.benedicto_cheese.clicked.connect(lambda: self.add_product("CheeseSticks", 25))
+        self.benedicto_soda.clicked.connect(lambda: self.add_product("Soda", 20))
+        self.benedicto_donut.clicked.connect(lambda: self.add_product("Donut", 20))
+        self.benedicto_icecream.clicked.connect(lambda: self.add_product("Fries", 20))
+
+        self.benedicto_remove.clicked.connect(self.remove_selected_product)
+        self.benedicto_dc.clicked.connect(self.apply_voucher)
+        
+        
+        self.price = 0.00
+        self.discount_applied = False
+        self.updatePrice()
+        
+        self.benedicto_pay.clicked.connect(self.pay)
+        
+    def apply_voucher(self):
+        from backend.Register import age
+            
+        if not self.discount_applied:
+            if  int(age) >= 60:  # Example age-based condition
+                discount = self.price * 0.10  # 10% discount
+                self.price -= discount
+                self.discount_applied = True
+                self.updatePrice()
+                message = QMessageBox()
+                message.setText('Discount Applied')
+                message.exec()
+            else:
+                message = QMessageBox()
+                message.setText('You are not qualified')
+                message.exec()        
+        else:
+            message = QMessageBox()
+            message.setText('Discount has already applied')
+            message.exec()
+            
+        
+    def updatePrice(self):
+        self.benedicto_prview.setText(f'{self.price:.2f}')
+        
+    def add_product(self, name, price):
+        row_position = self.benedicto_tbl.rowCount()
+        self.benedicto_tbl.insertRow(row_position)
+        self.benedicto_tbl.setItem(row_position, 0, QTableWidgetItem(name))
+        self.benedicto_tbl.setItem(row_position, 1, QTableWidgetItem(f"{price:.2f}"))
+
+        self.price += price
+        self.updatePrice()
+        
     def discountbtn(self):
-        from backend.Register import name, age
+        from backend.Register import age
 
         if int(age) >= 60:
                 discount = 0.20
@@ -261,6 +304,25 @@ class benedicto_HomeMainWindow(QMainWindow, Ui_MainWindow):
 
         self.layout.addLayout(buttons_layout)
         
+    def remove_selected_product(self):
+        selected_row = self.benedicto_tbl.currentRow()
+        if selected_row >= 0:
+            price_item = self.benedicto_tbl.item(selected_row, 1)
+            if price_item is not None:
+                price = float(price_item.text())
+                self.price -= price
+                self.benedicto_tbl.removeRow(selected_row)
+                self.updatePrice()
+                
+    def pay(self):
+            total_price = self.getTotalPrice()
+            self.payment_form = benedicto_PaymentMainWindow(total_price)
+            self.payment_form.show()
+            self.hide()
+            
+    def getTotalPrice(self):
+            return self.price
+    
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
